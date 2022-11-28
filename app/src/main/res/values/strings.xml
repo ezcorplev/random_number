@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RandomNumber</string>
+    <string name="random_number_here">Random Number Here</string>
+    <string name="click_me">Click Me!</string>
+</resources>
