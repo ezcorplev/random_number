@@ -7,53 +7,89 @@ import androidx.lifecycle.MutableLiveData
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.util.*
+
+// TODO
+// understand how to work with sparkAdapter to adapt data to UI
+// sparkAdapter requires FloatArray
+// understand how to change list from API into FloatArray
 
 
 class MainViewModel (app: Application) : AndroidViewModel(app) {
 
-
-
-//    val numList = Call<Any?>() // if we try this method we get interface Call does not have constructors
-//    val numList = Response<Int>().body()
-//    val response = randomNumberRepo.getRandomNumber(min = 1, max = 100)
-
-//    val numList = MutableLiveData<MutableList<Int>>().apply {
-//        viewModelScope.launch(Dispatchers.IO) {
-//            randomNumberRepo.getRandomNumber(min = 1, max = 100)
-////                .collect() // wont let me .collect unless fun in RandomNumberService interface is of Flow<Int>
-//        }
-//    }
+    private val TAG = MainViewModel::class.java.simpleName
 
     val numList = MutableLiveData<List<Int>>() // this is an empty list, we will add numbers to this list,
     // which we will later present in a chart
+    val numFloatArray = MutableLiveData<FloatArray>()
+    val tempFloatArray = FloatArray(10) // new FloatArray (0, 0, 0...)
+
 
     suspend fun getRandomNumber() {
-        val randomNumber: Call<Int> = RepoFactory.randomNumberRepo.getRandomNumber(min = 1, max = 100)
-        randomNumber.enqueue(object: Callback<Int> {
-            override fun onResponse(call: Call<Int>, response: Response<Int>) {
+        val randomNumber: Call<Int> = RepoFactory.randomNumberRepo.getRandomNumber(min = 1, max = 100) // new val as randomNumber
+        randomNumber.enqueue(object: Callback<Int> { // async call for randomNumber 1-100
+            override fun onResponse(call: Call<Int>, response: Response<Int>) { // set onResponse
                 if (response.isSuccessful) {
-                    val tempNumList = numList.value?.toMutableList()
-                    response.body()?.let {
-                        tempNumList?.add(it)
+                    val tempNumList = numList.value?.toMutableList() ?: mutableListOf()// set up temp var for list<Int> (instead of Call<List<Int>>)
+                    numFloatArray.value = tempFloatArray ?: FloatArray(10 )// now FloatArray -> (22, 17, 63...)
+                    response.body()?.let { // if response is not null
+                        tempNumList.addToListOrReplaceIfTenList(it)
+                        removeFirstAddLastInTenArray(tempFloatArray, it)
+                        } // add (it) Int to the list
                         numList.postValue(tempNumList) // numList.value = tempNumList, posts value to observers
+                        numFloatArray.postValue(tempFloatArray)
                     }
-
-
-
-                }
-                Log.d("yoyo", response.body().toString())
+                Log.d(TAG, response.body().toString())
+                Log.d(TAG, "onResponse: ${numFloatArray.value}")
             }
-
             override fun onFailure(call: Call<Int>, t: Throwable) {
-                Log.d("yoyo", "BALAGAN")
+                Log.d(TAG, "BALAGAN")
             }
-
         })
     }
 
+    fun MutableList<Int>.addToListOrReplaceIfTenList(num: Int): MutableList<Int> {
+
+//        if (this.isNullOrEmpty()) this = emptyList<Int>().toMutableList()
+
+        if (this.size > 9) { // if the list already contains 10 elements we need to replace [1] with [0] etc
+
+            this.removeAt(0)
+            this.add(num)
+
+        } else {
+            this.add(num)
+        }
+        return this
+    }
+
+    fun getRandomEveryTen() {
+
+        Timer().scheduleAtFixedRate( object : TimerTask() {
+            override fun run() {
+                viewModelScope.launch(Dispatchers.IO) {
+                    Log.d(TAG, "yoyo thread is ${Thread.currentThread().name}")
+                    getRandomNumber()
+                }
+            }
+        }, 0, 10000)
+    }
+
+    fun removeFirstAddLastInTenArray(array: FloatArray, num: Int): FloatArray {
+        val newNum = num.toFloat()
+
+        for (index in 0 until array.size - 1) { // run through array (0, 0, 0 ... 0> 10 elements)
+            array[index] = array[index + 1]
+        }
+        array[array.size - 1] = newNum
+
+        for (float in array) print("$float,").also { Log.d(TAG, "removeFirstAddLastInTenArray: $float") }
+        println("")
+        return array
+    }
+
 }
+

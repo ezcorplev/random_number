@@ -16,6 +16,34 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_get_random_number" />
 
+    <TextView
+        android:id="@+id/tv_num_list"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="@string/right_here"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_random_number" />
+
+    <com.robinhood.spark.SparkView
+        android:id="@+id/spark_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_num_list"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+<!--    <TextView-->
+<!--        android:id="@+id/scrub_info_textview"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="@string/scrub"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/spark_view" />-->
+
+
     <Button
         android:layout_width="wrap_content"
         android:id="@+id/btn_get_random_number"

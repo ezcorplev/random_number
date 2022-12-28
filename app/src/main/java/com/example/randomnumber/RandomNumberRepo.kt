@@ -14,7 +14,7 @@ internal object RandomNumberRepoImpl: RandomNumberRepo {
 
     override suspend fun getRandomNumber(min: Int, max: Int): Call<Int> =
 
-        MyRetrofit.getInstance().randomNumberService.getRandomNumber(min = 1, max = 100) // this implements the getRandomNumber
+        RetrofitInstance.randomNumberService.getRandomNumber(min = 1, max = 100) // this implements the getRandomNumber
     // from the RandomNumberInterface on the only instance of retrofit, which is a companion object in Retrofit Instance
 
 }
