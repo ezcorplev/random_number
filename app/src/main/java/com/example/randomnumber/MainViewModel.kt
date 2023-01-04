@@ -10,73 +10,83 @@ import retrofit2.Response
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Timer
+import java.util.TimerTask
 
-// TODO
-// understand how to work with sparkAdapter to adapt data to UI
-// sparkAdapter requires FloatArray
-// understand how to change list from API into FloatArray
-
-
-class MainViewModel (app: Application) : AndroidViewModel(app) {
+class MainViewModel(private val randomNumberRepo: RandomNumberRepo, app: Application) : AndroidViewModel(app) {
 
     private val TAG = MainViewModel::class.java.simpleName
 
-    val numList = MutableLiveData<List<Int>>() // this is an empty list, we will add numbers to this list,
-    // which we will later present in a chart
     val numFloatArray = MutableLiveData<FloatArray>()
-    val tempFloatArray = FloatArray(10) // new FloatArray (0, 0, 0...)
+    val tempFloatArray = FloatArray(10)
+    val numFloatList = MutableLiveData<List<Float>>()
+    val tempFloatList = mutableListOf<Float>()
+//    val errorLiveData = MutableLiveData<List<String>>()
+    val errorLiveData2 = MutableLiveData<Int>()
 
+    /**
+     * Calls RepoFactory.randomNumberRepo.getRandomNumber with values min = 1, max = 100
+     * Enqueues Callback<Int> asynchronously and implements onResponse and onFailure functions
+     * If response isSuccessful and response.body is not null -> updates tempFloatArray with
+     * response.body(Int), postValue of numFloatArray as tempFloatArray (updated Array with Int)
+     * If response is unsuccessful, adds error as String to errorLiveData, postValue of errorLiveData
+     * with new error, and logs response.code as String
+     * OnFailure logs @param t: Throwable as string
+     */
 
     suspend fun getRandomNumber() {
-        val randomNumber: Call<Int> = RepoFactory.randomNumberRepo.getRandomNumber(min = 1, max = 100) // new val as randomNumber
+
+        val randomNumber: Call<Int> = RepoFactory.randomNumberRepo.getRandomNumber(1, 100)
+
         randomNumber.enqueue(object: Callback<Int> { // async call for randomNumber 1-100
             override fun onResponse(call: Call<Int>, response: Response<Int>) { // set onResponse
                 if (response.isSuccessful) {
-                    val tempNumList = numList.value?.toMutableList() ?: mutableListOf()// set up temp var for list<Int> (instead of Call<List<Int>>)
-                    numFloatArray.value = tempFloatArray ?: FloatArray(10 )// now FloatArray -> (22, 17, 63...)
                     response.body()?.let { // if response is not null
-                        tempNumList.addToListOrReplaceIfTenList(it)
                         removeFirstAddLastInTenArray(tempFloatArray, it)
-                        } // add (it) Int to the list
-                        numList.postValue(tempNumList) // numList.value = tempNumList, posts value to observers
-                        numFloatArray.postValue(tempFloatArray)
-                    }
+                        queueList(tempFloatList, it)
+                    } // add (it) Int to the list
+                    numFloatArray.postValue(tempFloatArray)
+                    numFloatList.postValue(tempFloatList)
+                    errorLiveData2.postValue(response.body())
+                } else {
+                    val error = mutableListOf<String>()
+                    error.add("Error: ${response.code()}")
+                    Log.d(TAG, "Error: ${response.code()}")
+//                    errorLiveData.postValue(error)
+                    // Handle not successful (maybe log?)
+
+                }
                 Log.d(TAG, response.body().toString())
-                Log.d(TAG, "onResponse: ${numFloatArray.value}")
             }
             override fun onFailure(call: Call<Int>, t: Throwable) {
-                Log.d(TAG, "BALAGAN")
+                Log.d(TAG, "Failure: Call Failed ${t.message}")
             }
         })
     }
 
-    fun MutableList<Int>.addToListOrReplaceIfTenList(num: Int): MutableList<Int> {
-
-//        if (this.isNullOrEmpty()) this = emptyList<Int>().toMutableList()
-
-        if (this.size > 9) { // if the list already contains 10 elements we need to replace [1] with [0] etc
-
-            this.removeAt(0)
-            this.add(num)
-
-        } else {
-            this.add(num)
-        }
-        return this
-    }
+    /**
+     * Schedules a given task to run at a fixed rate
+     * Current task is set to getRandomNumber()
+     * Logs the current Thread that is used to execute said task
+     * period is used to decide the fixed rate (currently 1000ms)
+     */
 
     fun getRandomEveryTen() {
-
         Timer().scheduleAtFixedRate( object : TimerTask() {
             override fun run() {
                 viewModelScope.launch(Dispatchers.IO) {
-                    Log.d(TAG, "yoyo thread is ${Thread.currentThread().name}")
+                    Log.d(TAG, "Current Thread: ${Thread.currentThread().name}")
                     getRandomNumber()
                 }
             }
-        }, 0, 10000)
+        }, 0, 1000)
     }
+
+    /**
+     * Queues (removes array[0] and adds num) Array, returns updated FloatArray
+     * @param array - Input FloatArray of 10 elements
+     * @param num - Input Int that is queued into array
+     */
 
     fun removeFirstAddLastInTenArray(array: FloatArray, num: Int): FloatArray {
         val newNum = num.toFloat()
@@ -86,10 +96,27 @@ class MainViewModel (app: Application) : AndroidViewModel(app) {
         }
         array[array.size - 1] = newNum
 
-        for (float in array) print("$float,").also { Log.d(TAG, "removeFirstAddLastInTenArray: $float") }
-        println("")
         return array
     }
 
+    /**
+     * Queues (removes list[0] and adds num) List, returns updated List<Float>
+     * @param list - Input List<Float> of n elements of type Float
+     * @param num - Input Int that is queued into list
+     */
+
+    fun queueList(list: List<Float>, num: Int): List<Float> {
+        val mutableList = mutableListOf<Float>()
+        mutableList.addAll(list)
+
+        if (list.size < 10) {
+            mutableList.add(num.toFloat())
+        } else {
+            mutableList.removeAt(0)
+            mutableList.add(num.toFloat())
+        }
+
+        return mutableList
+    }
 }
 

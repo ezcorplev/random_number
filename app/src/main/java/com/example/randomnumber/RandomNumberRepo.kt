@@ -1,20 +1,18 @@
 package com.example.randomnumber
 
-import kotlinx.coroutines.flow.Flow
 import retrofit2.Call
-
 
 interface RandomNumberRepo {
 
+    /**
+     * Gets random number
+     * @param min - The minimum value of the fetched random number
+     * @param max - The maximum value of the fetched random number
+     */
     suspend fun getRandomNumber(min: Int, max: Int): Call<Int>
-
 }
 
 internal object RandomNumberRepoImpl: RandomNumberRepo {
-
     override suspend fun getRandomNumber(min: Int, max: Int): Call<Int> =
-
-        RetrofitInstance.randomNumberService.getRandomNumber(min = 1, max = 100) // this implements the getRandomNumber
-    // from the RandomNumberInterface on the only instance of retrofit, which is a companion object in Retrofit Instance
-
+        RetrofitInstance.randomNumberService.getRandomNumber(min = min, max = max)
 }

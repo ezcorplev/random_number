@@ -3,7 +3,9 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Users/Erez/AndroidStudioProjects/RandomNumber/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.134" />
         <entry key="..\:/Users/Erez/AndroidStudioProjects/RandomNumber/app/src/main/res/layout/activity_main.xml" value="0.22826086956521738" />
+        <entry key="..\:/Users/Erez/AndroidStudioProjects/RandomNumber/app/src/main/res/layout/activity_splash.xml" value="0.25416666666666665" />
       </map>
     </option>
   </component>
