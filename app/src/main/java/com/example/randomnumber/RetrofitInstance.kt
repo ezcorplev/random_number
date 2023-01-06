@@ -7,6 +7,7 @@ const val BASE_URL = "https://www.random.org/"
 
 object RetrofitInstance {
 
+    // Singleton
     val randomNumberService: RandomNumberService by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         Retrofit.Builder()
             .baseUrl(BASE_URL)

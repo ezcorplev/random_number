@@ -14,16 +14,11 @@ object ViewModelFactory {
  * Creates an instance of ViewModel depending on the modelClass provided
  * If modeClass does not exist, throws NotImplementedError with modelClass as String
  */
-
 private class ViewModelFactoryImpl(val app: Application) : ViewModelProvider.AndroidViewModelFactory(app) {
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
         MainViewModel::class.java -> MainViewModel(RepoFactory.randomNumberRepo, app) as T
         else -> throw NotImplementedError(modelClass.toString())
     }
-
-//private class ViewModelFactoryImpl() : ViewModelProvider.AndroidViewModelFactory(Application()) {
-//    override fun <T : ViewModel> create(modelClass: Class<T>): T = when (modelClass) {
-//        MainViewModel::class.java -> MainViewModel(RepoFactory.randomNumberRepo, Application) as T
-//    }
 }
